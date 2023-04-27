@@ -21,44 +21,107 @@ import numpy as np
 p1 = 101325.#pa
 T1 = 25.+273.15#k
 rp = 6.#compressor ratio
+rpNewComp = 3.#new compressor ratio
 T3 = 1350.+273.15#k
+T05 = T1 + 500; #cool the gas down to T1 plus 500
+compressorEf = 0.95;
+turbineEf = 0.93;
 
 #compressor
 h1 = CP.PropsSI('H','T',T1, 'P',p1,'Air')
 s1 = CP.PropsSI('S','T',T1, 'P',p1,'Air')
 p2 = p1*rp
 s2 = s1
-h2 = CP.PropsSI('H','S',s2, 'P',p2,'Air')
-w12 = h2 - h1
+h2Ideal = CP.PropsSI('H','S',s2, 'P',p2,'Air')
+w12Ideal = h2Ideal - h1
+
+h2Actual = ((h2Ideal-h1) / compressorEf)+h1;
+#h1 + ((h2Ideal - h1)/(compressorEf * h1));
+w12Actual = h2Actual - h1;
 # print the mass specific compressor work
-print('The mass specific compressor work is: '+str(round(w12/1000. ,2))+' kJ/kg')
+#print('The mass specific compressor work is: '+str(round(w12/1000. ,2))+' kJ/kg')
+
+#Compressor 0.5
+p05 = p1* rpNewComp;
+s05 = s1;
+h05Ideal = CP.PropsSI('H','S',s05, 'P',p05,'Air');
+h05Actual = ((h05Ideal-h1) / compressorEf)+h1;
+
+wCompressor05_Ideal = h05Ideal - h1;
+wCompressor05_Actual = h05Actual - h1;
+
+print('The Ideal mass specific compressor 1 work is: '+str(round(wCompressor05_Ideal/1000. ,2))+' kJ/kg');
+print('The Actual mass specific compressor 1 work is: '+str(round(wCompressor05_Actual/1000. ,2))+' kJ/kg');
+
+#Intercooler
+PIntercool = p05;
+sIntercool = CP.PropsSI('S','T',T05, 'P',p2,'Air');
+hAfterCool = CP.PropsSI('H','S',sIntercool, 'P',p05,'Air');
+
+
+qOutCoolIdeal = -hAfterCool + h05Ideal;
+qOutCoolActual = -hAfterCool + h05Actual;
+
+print('The Ideal mass specific heat loss in the intercooler is: '+str(round(qOutCoolIdeal/1000. ,2))+' kJ/kg');
+print('The Actual mass specific heat loss in the intercooler is: '+str(round(qOutCoolActual/1000. ,2))+' kJ/kg');
+
+#compressor15
+p15 = p2
+s15 = sIntercool;
+h15Ideal = CP.PropsSI('H','S',s15, 'P',p15,'Air');
+h15Actual = ((h15Ideal-hAfterCool) / compressorEf)+hAfterCool;
+
+wCompressor15_Ideal = h15Ideal-hAfterCool;
+wCompressor15_Actual = h15Actual-hAfterCool;
+
+print('The Ideal mass specific compressor 2 work is: '+str(round(wCompressor15_Ideal/1000. ,2))+' kJ/kg');
+print('The Real mass specific compressor 2 work is: '+str(round(wCompressor15_Actual/1000. ,2))+' kJ/kg');
+
 
 #combuster
 p3 = p2
 h3 = CP.PropsSI('H','T',T3, 'P',p3,'Air')
 s3 = CP.PropsSI('S','T',T3, 'P',p3,'Air')
-q23 = h3 - h2
+q23Ideal = h3 - h2Ideal
+q23Actual = h3 - h2Actual;
+
 # print the mass specific heat addition in the combustor
-print('The mass specific heat addition in the combustor is: '+str(round(q23/1000. ,2))+' kJ/kg')
+#print('The mass specific heat addition in the combustor is: '+str(round(q23/1000. ,2))+' kJ/kg')
 
 #Turbine / exchanger
 s4 = s3
 p4 = p1
-h4 = CP.PropsSI('H','S',s4, 'P',p4,'Air')
-w34 = h3 - h4
-q41 = h4 - h1
+h4Ideal = CP.PropsSI('H','S',s4, 'P',p4,'Air')
+
+h4Actual = -1. * (((h3-h4Ideal) * turbineEf)-h3);
+w34Ideal = h3 - h4Ideal
+w34Actual = h3-h4Actual
+
+q41Ideal = h4Ideal - h1;
+q41Actual = h4Actual - h1;
 # print the mass specific turbine work
-print('The mass specific turbine work is: '+str(round(w34/1000. ,2))+' kJ/kg')
+#print('The mass specific turbine work is: '+str(round(w34/1000. ,2))+' kJ/kg')
 # print the mass specific heat rejection in the heat exchanger
-print('The mass specific heat rejection in the combustor is: '+str(round(q41/1000. ,2))+' kJ/kg')
+#print('The mass specific heat rejection in the combustor is: '+str(round(q41/1000. ,2))+' kJ/kg')
 
 #efficency / Back Work
-eta_th = (w34 - w12)/q23
-bwr = w12/w34
+eta_th_Ideal = (w34Ideal - w12Ideal)/q23Ideal
+bwr_Ideal = w12Ideal/w34Ideal;
+eta_th_Real = (w34Actual - w12Actual)/q23Actual
+bwr_Real = w12Actual/w34Actual;
 # print the thermal efficiency
-print('The Braton cycle thermal efficiency is: '+str(round(eta_th*100. ,2))+' %')
+print('The Braton cycle Ideal thermal efficiency is: '+str(round(eta_th_Ideal*100. ,2))+' %')
+print('The Braton cycle Real thermal efficiency is: '+str(round(eta_th_Real*100. ,2))+' %')
 # print the back work ratio
-print('The back work ratio is: '+str(round(bwr ,3)))
+print('The Ideal back work ratio is: '+str(round(bwr_Ideal ,3)))
+print('The Real back work ratio is: '+str(round(bwr_Real ,3)))
+
+eta_th_Mod_Ideal = (w34Ideal - wCompressor05_Ideal - wCompressor15_Ideal)/(q23Ideal + qOutCoolIdeal);
+eta_th_Mod_Actual = (w34Actual - wCompressor05_Actual - wCompressor15_Actual)/(q23Actual + qOutCoolActual);
+print('The Braton cycle Modded Ideal thermal efficiency is: '+str(round(eta_th_Mod_Ideal*100. ,2))+' %');
+print('The Braton cycle Modded Real thermal efficiency is: '+str(round(eta_th_Mod_Actual*100. ,2))+' %');
+bwr_Mod_Ideal = (wCompressor05_Ideal + wCompressor15_Ideal)/w34Ideal;
+bwr_Mod_Actual = (wCompressor05_Actual + wCompressor15_Actual)/w34Actual;
 
 # Rankine
 print('// rankine cycle analysis');
@@ -106,7 +169,6 @@ print('The actual pump work is: '+str(round(w12r/1000))+ ' kJ/s');
 #Turbine
 turbineEfficency = 0.93;
 #temperature at which the steam enters reheat
-#should be at the halfway point #todo iterate over this too?
 
 s3r = CP.PropsSI('S','T',T3r, 'P',p3r,'Water');
 s4exitr = s3r;
@@ -127,6 +189,10 @@ safterBoilr = CP.PropsSI('S','P', prexit, 'T', Treheatr, 'Water');
 sFinalr = CP.PropsSI('S','P', prexit, 'T', Treheatr, 'Water');
 hfinalr = CP.PropsSI('H','S', sFinalr, 'P', p1r, 'Water');
 hfinalrIdeal = hfinalr;
+
+#Q in for boiler
+qBoiler = hafterboilr - h4exitr;
+
 #effuicenety efficency efficceccy
 hfinalr = -1. * (((hafterboilr-hfinalr) / turbineEfficency) - hafterboilr);
 #Quality
@@ -135,6 +201,13 @@ Xfinalr = CP.PropsSI('Q','S', safterBoilr, 'P', p1r, 'Water');
 wTurbine2r = hafterboilr - hfinalr;
 wTurbine2rActual = massFlowRankine * wTurbine2r
 print('The mass specific steam turbine work 2 is: ' + str(round(wTurbine2r)/1000) + ' kJ/kg');
+
+#Mythical Turbine
+hMythical_Ideal =  CP.PropsSI('H','P', p1r, 'S', s3r, 'Water');
+hMythical_Actual = -1. * (turbineEfficency * (h3r - hMythical_Ideal) - h3r);
+mythicalQuality = CP.PropsSI('Q','P', p1r, 'S', s3r, 'Water');
+
+wMythicalTurbine = h3r - hMythical_Actual;
 
 #Condensor
 q41r = hfinalr-h1r;
@@ -148,8 +221,9 @@ print('The mass specific heat rejection from the condenser is: ' + str(round(q41
 #print(w12ractual)
 #backWorkRatio = w12ractual / (wTurbine1rActual + wTurbine2rActual);
 #print('BWR: ' + str(backWorkRatio));
-thermalEfficency = (wTurbine1r + wTurbine2r - w12r) / q23r;
+thermalEfficency = (wTurbine1r + wTurbine2r - w12r) / (q23r+ qBoiler);
 print('TE: ' + str(thermalEfficency));
+mythicalEfficency = (wMythicalTurbine - w12r) / (q23r);
 
 #Plot of my Data
 
@@ -209,9 +283,3 @@ fig.savefig('Fig_test.eps')
 fig.savefig('Fig_test.pdf')
 
 plt.close()
-
-s = []
-
-for i in np.arange(0.1,11.,0.1):
-  j = CP.PropsSI('V','P', 1000., 'Q', 0.5, 'Water');
-  s = np.append(s,j)

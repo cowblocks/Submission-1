@@ -63,6 +63,8 @@
 
 \maketitle
 
+\pagebreak
+
 \section{Introduction}
 
     This study will analyze a conceptually combined gas and steam turbine power plant and seek to maximize efficiency. The gas and steam turbine mechanisms will be modeled using ideal Brayton and Rankine thermodynamic cycles with component efficiency factored into the processes. The Brayton cycle models the gas turbine part of the power plant. In the Brayton cycle atmospheric air is first pumped into a combustion chamber raising the pressure of the gas. Combustion is then modeled as heat entering the system in an isobaric process, the temperature rises, but the pressure is constant. The now pressurized and heated gas is put through a turbine to generate work. However, the gas is still extremely hot and more work can be extracted from that energy. The hot gas is then put through a heat exchanger which inputs heat into the Rankine cycle. The Rankine cycle models a steam turbine, which uses the spent heat from the Brayton cycle to heat water into steam that drives a turbine providing more work out. Figure 1 diagrams the inputs/outputs and flow of the two cycles.
@@ -112,18 +114,28 @@ This report will determine the increase in efficiency from using these extra com
 
 \FloatBarrier
 
-\section{Modeling}
+\section{ModelingBrayton}
 
-The attached Python script uses a database with experimental values for water and air at incremental states. Using the design requirements of the power plant for all the states of the working fluid/gas can be found. //I don't really know how technical you want us to get here, IE includes the formulae for finding work using h and such, and then using efficiency to find actual work, then using that to find the total efficiency. < ill probably include it to pad the word count anyway in the final report
-Then the script iterates over the gas turbine pressure ratio in increments of 0.01 finding the resultant total work out. The pressure ratio is the maximum pressure divided by the minimal pressure. 
+The attached Python script uses CoolProp, a database with experimental values for water and air at incremental states. Using the design requirements of the power plant for all the states of the working fluid/gas can be found. After factoring in the efficiency of the components the enthalpy of the materials can be used to find the work out, work in, and Q-in can be used to find the thermal efficiency of the two cycles. (I will use the real project numbers in submission 3, but for now, they are just random numbers)(kinda feel like reworking the code to use lists instead of lone vars to make it less confusing, and easier to iterate over various pressure ratios and temperatures with the final data to make a big thermal efficiency). The Brayton cycle model with the following initial conditions; a compressor efficiency of 0.95 and a turbine efficiency of 0.93 will have a thermal efficiency of 32.98 \%.
+\begin{itemize}
+\item  low pressure = 101325 pa
+\item Minimum temp of gas = 25 c
+\item compressor ratio = 6
+\item Maximum temp of gas = 1350 c
+\end{itemize}
 
-// Explain how I iterate over the graph, the boiler processes are constant Pressure and the turbine is constant S (Ideally).
+However, if an intercooler and second compressor are added to the cycle, with the initial compressor having a pressure ratio of 3, and the intercooler cooling the gas to 525c the system will have a thermal efficiency of 35.67 \%.  A 2.69 percent increase may not sound like a lot of savings, but most of the cost of running a power plant is fuel, and a 2.69 \% reduction in fuel costs is a serious amount of money.
+\section{ModelingRankine}
+The material properties at all states of the Rankine cycle can be found using CoolProp. Then using the enthalpy of the water at the various states work done by the pump, and work out of the turbines can be compared with Q-in.(will update values in submission 3 to project values) Using the following state conditions a pump efficiency of 0.92 and a turbine efficiency of 0.93 the thermal efficiency of the cycle is 37.48 \% is found.
+\begin{itemize}
+\item  low pressure = 6000 pa
+\item high pressure = 10000000 pa
+\item low temperature = 30 c
+\item high temperature = 440 c
+\end{itemize}
 
-// Explain how I iterate over different exit pressure of turbine 1 and various pressures for the Rankine cycle max and min, testing all for maximum efficiency.
+However, the minimum quality of the water exiting the turbine is specified to be larger than 90 \%, so as not to break it. Without a reheat and a second turbine, the quality at the turbine exit is 75 \%. If the water leaves the first turbine at 700000 pa and is reheated to the maximum temperature and then sent through a second turbine until it reaches the low pressure the thermal efficiency is 43.20 \%. Not only does the reheating step maintain the quality of the material, so the turbines aren't damaged, but it increases the thermal efficiency by a whole 5.72 \%. Figure 4 shows the modified Temperature and entropy graph of the cycle, the two big drop-offs are the isentropic expansions in the turbines.
 
-\section{Results}
-
-This is my results, //will elaborate
 \begin{figure}
     \centering
     \includegraphics{Fig_test.pdf}
@@ -133,6 +145,21 @@ This is my results, //will elaborate
 \end{figure}
 
 \FloatBarrier
+
+\section{Modeling Heat Exchanger}
+    \[Effectiveness = 0.85\]
+   \[Effectiveness = actual Q transfer/ Ideal Q transfer\]
+   \[massFlowRateBrayton(h_4 - h_1) = massFlowRateRankine(h_4 - h_1)\]
+   \[massFlowRateBrayton(Ideal Q transfer Brayton) = massFlowRateRankine(Ideal Q transfer Rankine)\]
+   \[Ideal Q transfer Brayton = Ideal Q transfer\]
+   \[actualQtransfer = Effeciveness * massFlowRateRankine(Ideal Q transfer Rankine) / massFlowRateBrayton\]
+
+
+
+\section{Results}
+
+This is my results, //will elaborate
+
 
 Include minimum calculated quality and efficiency of Rankine with and without the reheat cycle. I need to edit the graph to include labels with states.
 
