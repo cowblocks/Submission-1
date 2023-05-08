@@ -124,7 +124,7 @@ The attached Python script uses CoolProp, a database with experimental values fo
 \item Maximum temp of gas = 1350 Celsius
 \end{itemize}
 
-However, if an intercooler and second compressor are added to the cycle, with the initial compressor having a pressure ratio of 3, and the intercooler cooling the gas to 525c the system will have a thermal efficiency of 35.67 \%.  A 2.69 percent increase may not sound like a lot of savings, but most of the cost of running a power plant is fuel, and a 2.69 \% reduction in fuel costs is a serious amount of money.
+However, if an intercooler and second compressor are added to the cycle, with the initial compressor having a pressure ratio of 3, and the intercooler cooling the gas to 25 Celsius (25 Celsius was used for simplicity, an inter cooler would only quickly cool a gas to a temperature above the environmental temperature) the system will have a thermal efficiency of 35.67 \%.  A 2.69 percent increase may not sound like a lot of savings, but most of the cost of running a power plant is fuel, and a 2.69 \% reduction in fuel costs is a serious amount of money. The Following T-S diagram shows the cycle.
 
 \begin{figure}
     \centering
@@ -169,12 +169,12 @@ The actual heat transfered is defined as the heat input in the rankine cycle, wh
 The ideal heat transfered is defined as the mass flow rate multiplied by the mass specific change in enthalpy between state 4 and 1 of the Brayton cycle.
     \[Qideal = \dot{m} * (h_4 - h_1)\]
 The Mass Flow Rate of the Rankine Cycle can then be found as:
-    \[\dot{m}rankine = effectiveness * dot{m}brayton * (h_4 - h_1)brayton / (h_3 - h_2)rankine\]
+    \[\dot{m}rankine = effectiveness * \dot{m}brayton * (h_4 - h_1)brayton / (h_3 - h_2)rankine\]
 Using the MassFlowRate of both cycles the combined Cycle Efficiency can by found by combining the net work per second and Q-in of the cycles.
     \[CombinedEfficiency = netWork/Qin\]
     \[WorkPerSecond = \dot{m} * massSpecificWork\]
     \[QinPerSecond = Qin + \dot{m} * Qin-rankineReheat - \dot{m} * Qout-braytonIntercool\]
-    \[netWork = W-rankine + W-Brayton\]
+    \[netWork = W(rankine) + W(Brayton)\]
 After Inputting the initial values used in both cycles, and using these equations a combined Cycle efficiency of 41.50 \% is found. This isn't great, especially considering it is only a slightly larger efficiency than the Brayton cycle, and is a lower efficiency than the Rankine cycle. So it is imperative to improve the efficiency.
 
 \section{Maximising Pressure Ratio Efficiency}
@@ -236,7 +236,7 @@ The combined Rankine and Brayton cycle provide a large thermal efficiency as com
 \bibliography{Paper_template_bib_file}
 \bibliographystyle{aiaa}
 
-this = https://github.com/cowblocks/Submission-1; selfreferential = true;
+this = https://github.com/cowblocks/Submission-1
 
 \section*{Code Listing}
 
