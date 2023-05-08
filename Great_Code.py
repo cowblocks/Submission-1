@@ -14,272 +14,581 @@ from matplotlib import pyplot
 import matplotlib.pyplot as plt
 import numpy as np
 
-#Brayton
-
-#Todo (submission 2): add component efficency, add mod
-
 p1 = 101325.#pa
 T1 = 25.+273.15#k
 rp = 6.#compressor ratio
-rpNewComp = 3.#new compressor ratio
+rpNewComp = rp/2.#new compressor ratio
 T3 = 1350.+273.15#k
-T05 = T1 + 500; #cool the gas down to T1 plus 500
+T05 = T1; #cool the gas down to T1 plus 0
 compressorEf = 0.95;
 turbineEf = 0.93;
-
-#compressor
-h1 = CP.PropsSI('H','T',T1, 'P',p1,'Air')
-s1 = CP.PropsSI('S','T',T1, 'P',p1,'Air')
-p2 = p1*rp
-s2 = s1
-h2Ideal = CP.PropsSI('H','S',s2, 'P',p2,'Air')
-w12Ideal = h2Ideal - h1
-
-h2Actual = ((h2Ideal-h1) / compressorEf)+h1;
-#h1 + ((h2Ideal - h1)/(compressorEf * h1));
-w12Actual = h2Actual - h1;
-# print the mass specific compressor work
-#print('The mass specific compressor work is: '+str(round(w12/1000. ,2))+' kJ/kg')
-
-#Compressor 0.5
-p05 = p1* rpNewComp;
-s05 = s1;
-h05Ideal = CP.PropsSI('H','S',s05, 'P',p05,'Air');
-h05Actual = ((h05Ideal-h1) / compressorEf)+h1;
-
-wCompressor05_Ideal = h05Ideal - h1;
-wCompressor05_Actual = h05Actual - h1;
-
-print('The Ideal mass specific compressor 1 work is: '+str(round(wCompressor05_Ideal/1000. ,2))+' kJ/kg');
-print('The Actual mass specific compressor 1 work is: '+str(round(wCompressor05_Actual/1000. ,2))+' kJ/kg');
-
-#Intercooler
-PIntercool = p05;
-sIntercool = CP.PropsSI('S','T',T05, 'P',p2,'Air');
-hAfterCool = CP.PropsSI('H','S',sIntercool, 'P',p05,'Air');
-
-
-qOutCoolIdeal = -hAfterCool + h05Ideal;
-qOutCoolActual = -hAfterCool + h05Actual;
-
-print('The Ideal mass specific heat loss in the intercooler is: '+str(round(qOutCoolIdeal/1000. ,2))+' kJ/kg');
-print('The Actual mass specific heat loss in the intercooler is: '+str(round(qOutCoolActual/1000. ,2))+' kJ/kg');
-
-#compressor15
-p15 = p2
-s15 = sIntercool;
-h15Ideal = CP.PropsSI('H','S',s15, 'P',p15,'Air');
-h15Actual = ((h15Ideal-hAfterCool) / compressorEf)+hAfterCool;
-
-wCompressor15_Ideal = h15Ideal-hAfterCool;
-wCompressor15_Actual = h15Actual-hAfterCool;
-
-print('The Ideal mass specific compressor 2 work is: '+str(round(wCompressor15_Ideal/1000. ,2))+' kJ/kg');
-print('The Real mass specific compressor 2 work is: '+str(round(wCompressor15_Actual/1000. ,2))+' kJ/kg');
-
-
-#combuster
-p3 = p2
-h3 = CP.PropsSI('H','T',T3, 'P',p3,'Air')
-s3 = CP.PropsSI('S','T',T3, 'P',p3,'Air')
-q23Ideal = h3 - h2Ideal
-q23Actual = h3 - h2Actual;
-
-# print the mass specific heat addition in the combustor
-#print('The mass specific heat addition in the combustor is: '+str(round(q23/1000. ,2))+' kJ/kg')
-
-#Turbine / exchanger
-s4 = s3
-p4 = p1
-h4Ideal = CP.PropsSI('H','S',s4, 'P',p4,'Air')
-
-h4Actual = -1. * (((h3-h4Ideal) * turbineEf)-h3);
-w34Ideal = h3 - h4Ideal
-w34Actual = h3-h4Actual
-
-q41Ideal = h4Ideal - h1;
-q41Actual = h4Actual - h1;
-# print the mass specific turbine work
-#print('The mass specific turbine work is: '+str(round(w34/1000. ,2))+' kJ/kg')
-# print the mass specific heat rejection in the heat exchanger
-#print('The mass specific heat rejection in the combustor is: '+str(round(q41/1000. ,2))+' kJ/kg')
-
-#efficency / Back Work
-eta_th_Ideal = (w34Ideal - w12Ideal)/q23Ideal
-bwr_Ideal = w12Ideal/w34Ideal;
-eta_th_Real = (w34Actual - w12Actual)/q23Actual
-bwr_Real = w12Actual/w34Actual;
-# print the thermal efficiency
-print('The Braton cycle Ideal thermal efficiency is: '+str(round(eta_th_Ideal*100. ,2))+' %')
-print('The Braton cycle Real thermal efficiency is: '+str(round(eta_th_Real*100. ,2))+' %')
-# print the back work ratio
-print('The Ideal back work ratio is: '+str(round(bwr_Ideal ,3)))
-print('The Real back work ratio is: '+str(round(bwr_Real ,3)))
-
-eta_th_Mod_Ideal = (w34Ideal - wCompressor05_Ideal - wCompressor15_Ideal)/(q23Ideal + qOutCoolIdeal);
-eta_th_Mod_Actual = (w34Actual - wCompressor05_Actual - wCompressor15_Actual)/(q23Actual + qOutCoolActual);
-print('The Braton cycle Modded Ideal thermal efficiency is: '+str(round(eta_th_Mod_Ideal*100. ,2))+' %');
-print('The Braton cycle Modded Real thermal efficiency is: '+str(round(eta_th_Mod_Actual*100. ,2))+' %');
-bwr_Mod_Ideal = (wCompressor05_Ideal + wCompressor15_Ideal)/w34Ideal;
-bwr_Mod_Actual = (wCompressor05_Actual + wCompressor15_Actual)/w34Actual;
-
-# Rankine
-print('// rankine cycle analysis');
-
-#Todo Add Mod, Component Efficency, cycle
+turbineEfficiency = 0.93;
+turbineEfficency = 0.93;
 
 p1r = 6000 #pa
 p3r = 10000000 #Todo
-T1r = 30.+273.15#k
-T3r = 440.+273.15#k
+T1r = 35.+273.15#k
+T3r = 650.+273.15#k
 Treheatr = 440. + 273.15
 prexit = 700000
 
-#Quality (X) Min = 0.9
+QDotIn = 500000000; #joule per sec
+effectiveHeatExchange = 0.85
 
-#Pump
-pumpEfficency = 0.92;
-v1r = CP.PropsSI('V','P', p1r, 'T', T1r, 'Water');
-w12r = v1r * (p3r - p1r);
-h1r = CP.PropsSI('H','P', p1r, 'T', T1r, 'Water');
-h2r = w12r + h1r;
-#efficency equation
-h2r = -1. * (((h1r-h2r) / pumpEfficency) - h1r);
-print('The mass specific pump work is: '+str(round(w12r/1000))+ ' kJ/kg');
+CombinedCycleEfficiency = 0;
 
-#Boiler
-#calculate qin todo: calculate q in when meshed with brayton cycle, use effectiveness
-h3r = CP.PropsSI('H','P', p3r, 'T', T3r, 'Water');
-q23r = h3r-h2r;
-print('The mass specific heat addition in the boiler is: ' + str(round(q23r)/1000) + ' kJ/kg');
+#select pressure ratio rankine boiler pressure rankine condenser pressure
 
-#Calculate Mass flow rate #todo
-#first the brayton cycle would be solved for mass flow rate of the gas using Q in
-#then Q dot out would be solved
-#then using effectiveness Q dot out actual would be found
-#So im just using a placeholder Qdotactual out until submission 2
-QinRankineActual = 1000000. #J/s
-massFlowRankine = 600 #Todo
+def CombinedCycles(shouldPlot):
 
-#Pump Work
-#print(massFlowRankine);
-w12ractual = massFlowRankine * (h2r-h1r);
-print('The actual pump work is: '+str(round(w12r/1000))+ ' kJ/s');
+  #Brayton
 
-#Turbine
-turbineEfficency = 0.93;
-#temperature at which the steam enters reheat
+  #compressor
+  h1 = CP.PropsSI('H','T',T1, 'P',p1,'Air')
+  s1 = CP.PropsSI('S','T',T1, 'P',p1,'Air')
+  p2 = p1*rp
+  s2 = s1
+  h2Ideal = CP.PropsSI('H','S',s2, 'P',p2,'Air')
+  w12Ideal = h2Ideal - h1
 
-s3r = CP.PropsSI('S','T',T3r, 'P',p3r,'Water');
-s4exitr = s3r;
-xExitr = CP.PropsSI('Q','P', prexit, 'S', s4exitr, 'Water');
-h4exitr = CP.PropsSI('H','P', prexit, 'S', s4exitr, 'Water');
-h4exitrIdeal = h4exitr;
-#efficency equation
-h4exitr = -1. * (((h3r-h4exitr) / turbineEfficency) - h3r);
-wTurbine1r = h3r-h4exitr;
-wTurbine1rActual = massFlowRankine * (wTurbine1r)
-print('The mass specific steam turbine 1 work is: ' + str(round(wTurbine1r)/1000) + ' kJ/kg');
+  h2Actual = ((h2Ideal-h1) / compressorEf)+h1;
+  #h1 + ((h2Ideal - h1)/(compressorEf * h1));
+  w12Actual = h2Actual - h1;
+  # print the mass specific compressor work
+  #print('The mass specific compressor work is: '+str(round(w12/1000. ,2))+' kJ/kg')
 
-#Boiler->Turbine 2
-#for simplicity the working fluid is heated up to 3/4 tmax-tmin
+  #Compressor 0.5
+  p05 = p1* rpNewComp;
+  s05 = s1;
+  h05Ideal = CP.PropsSI('H','S',s05, 'P',p05,'Air');
+  h05Actual = ((h05Ideal-h1) / compressorEf)+h1;
 
-hafterboilr = CP.PropsSI('H','P', prexit, 'T', Treheatr, 'Water');
-safterBoilr = CP.PropsSI('S','P', prexit, 'T', Treheatr, 'Water');
-sFinalr = CP.PropsSI('S','P', prexit, 'T', Treheatr, 'Water');
-hfinalr = CP.PropsSI('H','S', sFinalr, 'P', p1r, 'Water');
-hfinalrIdeal = hfinalr;
+  wCompressor05_Ideal = h05Ideal - h1;
+  wCompressor05_Actual = h05Actual - h1;
 
-#Q in for boiler
-qBoiler = hafterboilr - h4exitr;
+  #print('The Ideal mass specific compressor 1 work is: '+str(round(wCompressor05_Ideal/1000. ,2))+' kJ/kg');
+  #print('The Actual mass specific compressor 1 work is: '+str(round(wCompressor05_Actual/1000. ,2))+' kJ/kg');
 
-#effuicenety efficency efficceccy
-hfinalr = -1. * (((hafterboilr-hfinalr) / turbineEfficency) - hafterboilr);
-#Quality
-Xfinalr = CP.PropsSI('Q','S', safterBoilr, 'P', p1r, 'Water');
+  #Intercooler
+  PIntercool = p05;
+  sIntercool = CP.PropsSI('S','T',T05, 'P',p2,'Air');
+  hAfterCool = CP.PropsSI('H','S',sIntercool, 'P',p05,'Air');
 
-wTurbine2r = hafterboilr - hfinalr;
-wTurbine2rActual = massFlowRankine * wTurbine2r
-print('The mass specific steam turbine work 2 is: ' + str(round(wTurbine2r)/1000) + ' kJ/kg');
 
-#Mythical Turbine
-hMythical_Ideal =  CP.PropsSI('H','P', p1r, 'S', s3r, 'Water');
-hMythical_Actual = -1. * (turbineEfficency * (h3r - hMythical_Ideal) - h3r);
-mythicalQuality = CP.PropsSI('Q','P', p1r, 'S', s3r, 'Water');
+  qOutCoolIdeal = h05Ideal - hAfterCool;
+  qOutCoolActual = h05Actual - hAfterCool;
 
-wMythicalTurbine = h3r - hMythical_Actual;
+  #print('The Ideal mass specific heat loss in the intercooler is: '+str(round(qOutCoolIdeal/1000. ,2))+' kJ/kg');
+  #print('The Actual mass specific heat loss in the intercooler is: '+str(round(qOutCoolActual/1000. ,2))+' kJ/kg');
 
-#Condensor
-q41r = hfinalr-h1r;
-Q41rAcutal = massFlowRankine * q41r
-print('The mass specific heat rejection from the condenser is: ' + str(round(q41r)/1000) + ' kJ/kg');
+  #compressor15
+  p15 = p2
+  s15 = sIntercool;
+  h15Ideal = CP.PropsSI('H','S',s15, 'P',p15,'Air');
+  h15Actual = ((h15Ideal-hAfterCool) / compressorEf)+hAfterCool;
 
-#todo fix
-#Thermal Efficenecy
-#netPowerR = wTurbine1rActual + wTurbine2rActual - w12ractual
-#print('Net Power: ' + str(round(netPowerR)));
-#print(w12ractual)
-#backWorkRatio = w12ractual / (wTurbine1rActual + wTurbine2rActual);
-#print('BWR: ' + str(backWorkRatio));
-thermalEfficency = (wTurbine1r + wTurbine2r - w12r) / (q23r+ qBoiler);
-print('TE: ' + str(thermalEfficency));
-mythicalEfficency = (wMythicalTurbine - w12r) / (q23r);
+  wCompressor15_Ideal = h15Ideal-hAfterCool;
+  wCompressor15_Actual = h15Actual-hAfterCool;
 
-#Plot of my Data
+  #print('The Ideal mass specific compressor 2 work is: '+str(round(wCompressor15_Ideal/1000. ,2))+' kJ/kg');
+  #print('The Real mass specific compressor 2 work is: '+str(round(wCompressor15_Actual/1000. ,2))+' kJ/kg');
 
-#TS Diagram
 
-s1r = CP.PropsSI('S','P', p1r, 'T', T1r, 'Water');
-#iterate over boil stage 1
-boiler1 = np.array([]);
-sArray1 = np.arange(s1r,s3r,10);
-for i in sArray1:
-  j = CP.PropsSI('T','S', i, 'P', p3r, 'Water');
-  boiler1 = np.append(boiler1, j);
+  #combuster
+  p3 = p2
+  h3 = CP.PropsSI('H','T',T3, 'P',p3,'Air')
+  s3 = CP.PropsSI('S','T',T3, 'P',p3,'Air')
+  q23Ideal = h3 - h2Ideal
+  q23Actual = h3 - h2Actual;
 
-boiler2 = np.array([]);
-sArray2 = np.arange(s3r,sFinalr,10);
-for i in sArray2:
-  j = CP.PropsSI('T','S', i, 'P', prexit, 'Water');
-  boiler2 = np.append(boiler2, j);
+  #print the mass specific heat addition in the combustor
+  #print('The mass specific heat addition in the combustor is: '+str(round(q23/1000. ,2))+' kJ/kg')
 
-turbine1 = np.array([]);
-sArray3 = np.array([]);
-hArray1 = np.arange(h4exitrIdeal,h3r,5000);
-for i in hArray1:
-  j = CP.PropsSI('T','S', s3r, 'H', i, 'Water');
-  turbine1 = np.append(turbine1, j);
-  sArray3 = np.append(sArray3, s3r);
+  #Turbine / exchanger
+  s4 = s3
+  p4 = p1
+  h4Ideal = CP.PropsSI('H','S',s4, 'P',p4,'Air')
 
-turbine2 = np.array([]);
-sArray4 = np.array([]);
-hArray2 = np.arange(hfinalrIdeal,hafterboilr,5000);
-for i in hArray2:
-  j = CP.PropsSI('T','S', sFinalr, 'H', i, 'Water');
-  turbine2 = np.append(turbine2, j);
-  sArray4 = np.append(sArray4, sFinalr);
+  h4Actual = -1. * (((h3-h4Ideal) * turbineEf)-h3);
+  w34Ideal = h3 - h4Ideal
+  w34Actual = h3-h4Actual
 
-condenser1 = np.array([]);
-sArray5 = np.arange(s1r,sFinalr,100)
-for i in sArray5:
-  j = CP.PropsSI('T','S', i, 'P', p1r, 'Water');
-  condenser1 = np.append(condenser1, j);
+  q41Ideal = h4Ideal - h1;
+  q41Actual = h4Actual - h1;
+  # print the mass specific turbine work
+  #print('The mass specific turbine work is: '+str(round(w34/1000. ,2))+' kJ/kg')
+  # print the mass specific heat rejection in the heat exchanger
+  #print('The mass specific heat rejection in the combustor is: '+str(round(q41/1000. ,2))+' kJ/kg')
+
+  #efficency / Back Work
+  eta_th_Ideal = (w34Ideal - w12Ideal)/q23Ideal
+  bwr_Ideal = w12Ideal/w34Ideal;
+  eta_th_Real = (w34Actual - w12Actual)/q23Actual
+  bwr_Real = w12Actual/w34Actual;
+  # print the thermal efficiency
+  #print('The Braton cycle Ideal thermal efficiency is: '+str(round(eta_th_Ideal*100. ,2))+' %')
+  #print('The Braton cycle Real thermal efficiency is: '+str(round(eta_th_Real*100. ,2))+' %')
+  # print the back work ratio
+  #print('The Ideal back work ratio is: '+str(round(bwr_Ideal ,3)))
+  #print('The Real back work ratio is: '+str(round(bwr_Real ,3)))
+
+  eta_th_Mod_Ideal = (w34Ideal - wCompressor05_Ideal - wCompressor15_Ideal)/(q23Ideal);
+  eta_th_Mod_Actual = (w34Actual - wCompressor05_Actual - wCompressor15_Actual)/(q23Actual);
+  #print('The Braton cycle Modded Ideal thermal efficiency is: '+str(round(eta_th_Mod_Ideal*100. ,2))+' %');
+  #print('The Braton cycle Modded Real thermal efficiency is: '+str(round(eta_th_Mod_Actual*100. ,2))+' %');
+  bwr_Mod_Ideal = (wCompressor05_Ideal + wCompressor15_Ideal)/w34Ideal;
+  bwr_Mod_Actual = (wCompressor05_Actual + wCompressor15_Actual)/w34Actual;
+
+
+
+  # Rankine
+  #print('// rankine cycle analysis');
+
+  #Todo Add Mod, Component Efficency, cycle
+
+  #Quality (X) Min = 0.9
+
+
+  #Pump
+  pumpEfficency = 0.92;
+  v1r = CP.PropsSI('V','P', p1r, 'T', T1r, 'Water');
+  w12r = v1r * (p3r - p1r);
+  h1r = CP.PropsSI('H','P', p1r, 'T', T1r, 'Water');
+  h2r = w12r + h1r;
+  #efficency equation
+  h2r = -1. * (((h1r-h2r) / pumpEfficency) - h1r);
+  #print('The mass specific pump work is: '+str(round(w12r/1000))+ ' kJ/kg');
+
+  #Boiler
+  #calculate qin todo: calculate q in when meshed with brayton cycle, use effectiveness
+  h3r = CP.PropsSI('H','P', p3r, 'T', T3r, 'Water');
+  q23r = h3r-h2r;
+  #print('The mass specific heat addition in the boiler is: ' + str(round(q23r)/1000) + ' kJ/kg');
+
+
+  #Pump Work
+  #print(massFlowRankine);
+  #print('The actual pump work is: '+str(round(w12r/1000))+ ' kJ/s');
+
+  #Turbine
+  #temperature at which the steam enters reheat
+
+  s3r = CP.PropsSI('S','T',T3r, 'P',p3r,'Water');
+  s4exitr = s3r;
+  xExitr = CP.PropsSI('Q','P', prexit, 'S', s4exitr, 'Water');
+  h4exitr = CP.PropsSI('H','P', prexit, 'S', s4exitr, 'Water');
+  h4exitrIdeal = h4exitr;
+  #efficency equation
+  h4exitr = -1. * (((h3r-h4exitr) / turbineEfficency) - h3r);
+  wTurbine1r = h3r-h4exitr;
+  #print('The mass specific steam turbine 1 work is: ' + str(round(wTurbine1r)/1000) + ' kJ/kg');
+
+  #Boiler->Turbine 2
+  #for simplicity the working fluid is heated up to 3/4 tmax-tmin
+
+  hafterboilr = CP.PropsSI('H','P', prexit, 'T', Treheatr, 'Water');
+  safterBoilr = CP.PropsSI('S','P', prexit, 'T', Treheatr, 'Water');
+  sFinalr = CP.PropsSI('S','P', prexit, 'T', Treheatr, 'Water');
+  hfinalr = CP.PropsSI('H','S', sFinalr, 'P', p1r, 'Water');
+  hfinalrIdeal = hfinalr;
+
+  #Q in for boiler
+  qBoiler = hafterboilr - h4exitr;
+
+  #effuicenety efficency efficceccy
+  hfinalr = -1. * (((hafterboilr-hfinalr) / turbineEfficency) - hafterboilr);
+  #Quality
+  Xfinalr = CP.PropsSI('Q','S', safterBoilr, 'P', p1r, 'Water');
+  XWithoutReheat = CP.PropsSI('Q','S', s3r, 'P', p1r, 'Water');
+
+  wTurbine2r = hafterboilr - hfinalr;
+  #print('The mass specific steam turbine work 2 is: ' + str(round(wTurbine2r)/1000) + ' kJ/kg');
+
+  #Mythical Turbine
+  hMythical_Ideal =  CP.PropsSI('H','P', p1r, 'S', s3r, 'Water');
+  hMythical_Actual = -1. * (turbineEfficency * (h3r - hMythical_Ideal) - h3r);
+  mythicalQuality = CP.PropsSI('Q','P', p1r, 'S', s3r, 'Water');
+
+  wMythicalTurbine = h3r - hMythical_Actual;
+
+  #Condensor
+  q41r = hfinalr-h1r;
+  #print('The mass specific heat rejection from the condenser is: ' + str(round(q41r)/1000) + ' kJ/kg');
+
+  thermalEfficency = (wTurbine1r + wTurbine2r - w12r) / (q23r+ qBoiler);
+  #print('TE: ' + str(thermalEfficency));
+  mythicalEfficency = (wMythicalTurbine - w12r) / (q23r);
+
+
+  # Combine the Cycles
+
+  massFlowBrayton = QDotIn / q23Actual;
+  massFlowRankine = effectiveHeatExchange * massFlowBrayton / q41Actual;
+
+  workPerSecondBrayton = massFlowBrayton * (w34Actual - wCompressor05_Actual - wCompressor15_Actual);
+  workPerSecondRankine = massFlowRankine * (wTurbine1r + wTurbine2r - w12r);
+
+  CombinedCycleEfficiency = (workPerSecondBrayton + workPerSecondRankine) / (QDotIn - massFlowBrayton * qOutCoolActual + massFlowRankine * qBoiler);
+  #print(CombinedCycleEfficiency);
+  #print(qOutCoolActual);
+
+  def plotBrayton():
+    #TS Diagram Brayton
+
+    #iterate over compressor 1
+    #s1 constant
+    compressorArray1 = np.array([]);
+    sArray1 = np.array([]);
+    hCompressorArray1 = np.arange(h1,h05Actual, 1000);
+    for i in hCompressorArray1:
+      j = CP.PropsSI('T','S', s1, 'H', i, 'Air');
+      compressorArray1 = np.append(compressorArray1, j);
+      sArray1 = np.append(sArray1, s1);
+
+    #iterate over intercooler
+    #p05 is constant
+    sArray2 = np.arange(s15,s1,10);
+    intercoolerArray = np.array([]);
+    for i in sArray2:
+      j = CP.PropsSI('T','S', i, 'P', p05, 'Air');
+      intercoolerArray = np.append(intercoolerArray,j);
+
+    #iterate over compressor 2
+    #s15 is constant
+    compressorArray2 = np.array([]);
+    sArray3 = np.array([]);
+    hCompressorArray2 = np.arange(hAfterCool,h15Actual,1000);
+    for i in hCompressorArray2:
+      j = CP.PropsSI('T','S', s15, 'H', i, 'Air');
+      compressorArray2 = np.append(compressorArray2,j);
+      sArray3 = np.append(sArray3,s15);
+
+    #iterate over Combustor
+    #p2 is constant
+    sArray4 = np.arange(s15,s3,10);
+    combustorArray = np.array([]);
+    for i in sArray4:
+      j = CP.PropsSI('T','S', i, 'P', p2, 'Air');
+      combustorArray = np.append(combustorArray,j);
+
+    #iterate over gas turbine
+    #s3 is constant
+    sArray5 = np.array([]);
+    gasTurbineArray = np.array([]);
+    hGasTurbineArray = np.arange(h4Actual,h3,1000);
+    for i in hGasTurbineArray:
+      j = CP.PropsSI('T','H', i, 'S', s3, 'Air');
+      gasTurbineArray = np.append(gasTurbineArray, j);
+      sArray5 = np.append(sArray5,s3);
+
+    fig = plt.figure(32,figsize=(6,5))
+    plt.scatter(sArray1,compressorArray1, marker = '.');
+    plt.scatter(sArray2,intercoolerArray, marker= '.');
+    plt.scatter(sArray3,compressorArray2, marker= '.');
+    plt.scatter(sArray4,combustorArray, marker= '.');
+    plt.scatter(sArray5,gasTurbineArray, marker = '.');
+    plt.legend(loc=6)
+    plt.xlabel('S (J/kg')
+    plt.xlim([3000, 6000])
+    plt.ylabel('T (kelvin)')
+
+    plt.show()
+    # or output pdf file (just don't waste your time outputting jpg or png files)
+    fig.savefig('BraytonDiagramInitial.pdf')
+
+    plt.close()
+
+  def plotRankine():
+    #Plot of my Data
+
+    #TS Diagram Rankine
+
+    s1r = CP.PropsSI('S','P', p1r, 'T', T1r, 'Water');
+    #iterate over boil stage 1
+    boiler1 = np.array([]);
+    sArray1 = np.arange(s1r,s3r,10);
+    for i in sArray1:
+      j = CP.PropsSI('T','S', i, 'P', p3r, 'Water');
+      boiler1 = np.append(boiler1, j);
+
+    boiler2 = np.array([]);
+    sArray2 = np.arange(s3r,sFinalr,10);
+    for i in sArray2:
+      j = CP.PropsSI('T','S', i, 'P', prexit, 'Water');
+      boiler2 = np.append(boiler2, j);
+
+    turbine1 = np.array([]);
+    sArray3 = np.array([]);
+    hArray1 = np.arange(h4exitrIdeal,h3r,5000);
+    for i in hArray1:
+      j = CP.PropsSI('T','S', s3r, 'H', i, 'Water');
+      turbine1 = np.append(turbine1, j);
+      sArray3 = np.append(sArray3, s3r);
+
+    turbine2 = np.array([]);
+    sArray4 = np.array([]);
+    hArray2 = np.arange(hfinalrIdeal,hafterboilr,5000);
+    for i in hArray2:
+      j = CP.PropsSI('T','S', sFinalr, 'H', i, 'Water');
+      turbine2 = np.append(turbine2, j);
+      sArray4 = np.append(sArray4, sFinalr);
+
+    condenser1 = np.array([]);
+    sArray5 = np.arange(s1r,sFinalr,100)
+    for i in sArray5:
+      j = CP.PropsSI('T','S', i, 'P', p1r, 'Water');
+      condenser1 = np.append(condenser1, j);
+
+    fig = plt.figure(32,figsize=(6,5))
+    plt.scatter(sArray1,boiler1, marker = '.');
+    plt.scatter(sArray2,boiler2, marker= '.');
+    plt.scatter(sArray3,turbine1, marker= '|');
+    plt.scatter(sArray4,turbine2, marker= '|');
+    plt.scatter(sArray5,condenser1, marker = '.');
+    plt.legend(loc=6)
+    plt.xlabel('S (J/kg')
+    plt.xlim([0, 10000])
+    plt.ylabel('T (kelvin)')
+
+    plt.show()
+
+    # or output pdf file (just don't waste your time outputting jpg or png files)
+    fig.savefig('RankineInitial.pdf')
+
+    plt.close()
+
+  def plotBrayton2():
+    #TS Diagram Brayton
+
+    #iterate over compressor 1
+    #s1 constant
+    compressorArray1 = np.array([]);
+    sArray1 = np.array([]);
+    hCompressorArray1 = np.arange(h1,h05Actual, 1000);
+    for i in hCompressorArray1:
+      j = CP.PropsSI('T','S', s1, 'H', i, 'Air');
+      compressorArray1 = np.append(compressorArray1, j);
+      sArray1 = np.append(sArray1, s1);
+
+    #iterate over intercooler
+    #p05 is constant
+    sArray2 = np.arange(s15,s1,10);
+    intercoolerArray = np.array([]);
+    for i in sArray2:
+      j = CP.PropsSI('T','S', i, 'P', p05, 'Air');
+      intercoolerArray = np.append(intercoolerArray,j);
+
+    #iterate over compressor 2
+    #s15 is constant
+    compressorArray2 = np.array([]);
+    sArray3 = np.array([]);
+    hCompressorArray2 = np.arange(hAfterCool,h15Actual,1000);
+    for i in hCompressorArray2:
+      j = CP.PropsSI('T','S', s15, 'H', i, 'Air');
+      compressorArray2 = np.append(compressorArray2,j);
+      sArray3 = np.append(sArray3,s15);
+
+    #iterate over Combustor
+    #p2 is constant
+    sArray4 = np.arange(s15,s3,10);
+    combustorArray = np.array([]);
+    for i in sArray4:
+      j = CP.PropsSI('T','S', i, 'P', p2, 'Air');
+      combustorArray = np.append(combustorArray,j);
+
+    #iterate over gas turbine
+    #s3 is constant
+    sArray5 = np.array([]);
+    gasTurbineArray = np.array([]);
+    hGasTurbineArray = np.arange(h4Actual,h3,1000);
+    for i in hGasTurbineArray:
+      j = CP.PropsSI('T','H', i, 'S', s3, 'Air');
+      gasTurbineArray = np.append(gasTurbineArray, j);
+      sArray5 = np.append(sArray5,s3);
+
+    fig = plt.figure(32,figsize=(6,5))
+    plt.scatter(sArray1,compressorArray1, marker = '.');
+    plt.scatter(sArray2,intercoolerArray, marker= '.');
+    plt.scatter(sArray3,compressorArray2, marker= '.');
+    plt.scatter(sArray4,combustorArray, marker= '.');
+    plt.scatter(sArray5,gasTurbineArray, marker = '.');
+    plt.legend(loc=6)
+    plt.xlabel('S (J/kg')
+    plt.xlim([0, 6000])
+    plt.ylabel('T (kelvin)')
+
+    plt.show()
+
+    fig.savefig('BraytonDiagramEfficient.eps')
+    # or output pdf file (just don't waste your time outputting jpg or png files)
+    fig.savefig('BraytonDiagramEfficient.pdf')
+
+    plt.close()
+
+  def plotRankine2():
+    #Plot of my Data
+
+    #TS Diagram Rankine
+
+    s1r = CP.PropsSI('S','P', p1r, 'T', T1r, 'Water');
+    #iterate over boil stage 1
+    boiler1 = np.array([]);
+    sArray1 = np.arange(s1r,s3r,10);
+    for i in sArray1:
+      j = CP.PropsSI('T','S', i, 'P', p3r, 'Water');
+      boiler1 = np.append(boiler1, j);
+
+    boiler2 = np.array([]);
+    sArray2 = np.arange(s3r,sFinalr,10);
+    for i in sArray2:
+      j = CP.PropsSI('T','S', i, 'P', prexit, 'Water');
+      boiler2 = np.append(boiler2, j);
+
+    turbine1 = np.array([]);
+    sArray3 = np.array([]);
+    hArray1 = np.arange(h4exitrIdeal,h3r,5000);
+    for i in hArray1:
+      j = CP.PropsSI('T','S', s3r, 'H', i, 'Water');
+      turbine1 = np.append(turbine1, j);
+      sArray3 = np.append(sArray3, s3r);
+
+    turbine2 = np.array([]);
+    sArray4 = np.array([]);
+    hArray2 = np.arange(hfinalrIdeal,hafterboilr,5000);
+    for i in hArray2:
+      j = CP.PropsSI('T','S', sFinalr, 'H', i, 'Water');
+      turbine2 = np.append(turbine2, j);
+      sArray4 = np.append(sArray4, sFinalr);
+
+    condenser1 = np.array([]);
+    sArray5 = np.arange(s1r,sFinalr,100)
+    for i in sArray5:
+      j = CP.PropsSI('T','S', i, 'P', p1r, 'Water');
+      condenser1 = np.append(condenser1, j);
+
+    fig = plt.figure(32,figsize=(6,5))
+    plt.scatter(sArray1,boiler1, marker = '.');
+    plt.scatter(sArray2,boiler2, marker= '.');
+    plt.scatter(sArray3,turbine1, marker= '|');
+    plt.scatter(sArray4,turbine2, marker= '|');
+    plt.scatter(sArray5,condenser1, marker = '.');
+    plt.legend(loc=6)
+    plt.xlabel('S (J/kg')
+    plt.xlim([0, 10000])
+    plt.ylabel('T (kelvin)')
+
+    plt.show()
+
+    fig.savefig('RankineEfficient.eps')
+    # or output pdf file (just don't waste your time outputting jpg or png files)
+    fig.savefig('RankineEfficient.pdf')
+
+    plt.close()
+  
+  
+  #Im kinda over python, so i literally just copy pasted a function and changed the name of the pdf it saved
+  #this isn't production code, and python sucks
+  if shouldPlot == 1:
+    plotBrayton();
+    plotRankine();
+  if shouldPlot == 2:
+    plotBrayton2();
+    plotRankine2();
+
+    
+  print(eta_th_Real)
+  print(eta_th_Mod_Actual)
+  print(thermalEfficency)
+  print(mythicalEfficency);
+  print(XWithoutReheat);
+  return CombinedCycleEfficiency;
+
+
+# plotsInitial Graphs
+shouldPlot = 1;
+print(CombinedCycles(shouldPlot));
+shouldPlot = 0;
+
+#iterate over pressure ratio
+rpArray = np.arange(1,40,1);
+efficiencyAcrossRP = np.array([]);
+for i in rpArray:
+  rp = i;
+  stupidNotGlobalPythonVars = CombinedCycles(shouldPlot);
+  efficiencyAcrossRP = np.append(efficiencyAcrossRP,stupidNotGlobalPythonVars);
 
 fig = plt.figure(32,figsize=(6,5))
-plt.scatter(sArray1,boiler1, marker = '.');
-plt.scatter(sArray2,boiler2, marker= '.');
-plt.scatter(sArray3,turbine1, marker= '|');
-plt.scatter(sArray4,turbine2, marker= '|');
-plt.scatter(sArray5,condenser1, marker = '.');
+plt.scatter(rpArray,efficiencyAcrossRP, marker = '.');
 plt.legend(loc=6)
-plt.xlabel('S (J/kg')
-plt.xlim([0, 10000])
-plt.ylabel('T (kelvin)')
+plt.xlabel('Pressure Ratio')
+plt.xlim([0, 50])
+plt.ylabel('Efficiency')
 
 plt.show()
 
-fig.savefig('Fig_test.eps')
 # or output pdf file (just don't waste your time outputting jpg or png files)
-fig.savefig('Fig_test.pdf')
+fig.savefig('presureratioefficiencygraph.pdf')
 
 plt.close()
+
+rp = 6;
+
+#iterate over rankine Cycle boiler pressure
+rankineLowPressureArray = np.arange(1000,10000,100);
+efficiencyAcrossLowPressure = np.array([]);
+for i in rankineLowPressureArray:
+  p1r = i;
+  stupidNotGlobalPythonVars = round(CombinedCycles(shouldPlot),10);
+  efficiencyAcrossLowPressure = np.append(efficiencyAcrossLowPressure,stupidNotGlobalPythonVars);
+
+fig = plt.figure(32,figsize=(6,5))
+plt.scatter(rankineLowPressureArray,efficiencyAcrossLowPressure, marker = '.');
+plt.legend(loc=6)
+plt.xlabel('RankineCycleLowPressure')
+plt.xlim([0, 10000])
+plt.ylabel('Efficiency')
+
+plt.show()
+
+# or output pdf file (just don't waste your time outputting jpg or png files)
+fig.savefig('RankineLowPressureGraph.pdf')
+
+plt.close()
+
+p1r = 6000;
+
+#iterate over rakine cycle condensor pressure
+
+rankineHighPressureArray = np.arange(100000,100000000,1000000)
+efficiencyAcrossHighPressureArray = np.array([]);
+for i in rankineHighPressureArray:
+  p3r = i;
+  stupidNotGlobalPythonVars = CombinedCycles(shouldPlot);
+  efficiencyAcrossHighPressureArray = np.append(efficiencyAcrossHighPressureArray,stupidNotGlobalPythonVars);
+
+fig = plt.figure(32,figsize=(6,5))
+plt.scatter(rankineHighPressureArray,efficiencyAcrossHighPressureArray, marker = '.');
+plt.legend(loc=6)
+plt.xlabel('RankineCycleHighPressure')
+plt.xlim([0, 100000000])
+plt.ylabel('Efficiency')
+
+plt.show()
+fig.savefig('RankineHighPressureGraph.pdf')
+
+plt.close()
+
+p3r = 10000000;
+
+#Plot the most Efficient graphs, why not, is it not pretty?
+maximumIndex = efficiencyAcrossRP.argmax();
+rp = rpArray[maximumIndex];
+maximumIndex = efficiencyAcrossLowPressure.argmax();
+p1r = rankineLowPressureArray[maximumIndex];
+maximumIndex = efficiencyAcrossHighPressureArray.argmax();
+p3r = rankineHighPressureArray[maximumIndex];
+shouldPlot = 2;
+print(CombinedCycles(shouldPlot));
+print(rp);
+print(p1r);
+print(p3r);

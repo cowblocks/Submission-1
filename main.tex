@@ -114,31 +114,42 @@ This report will determine the increase in efficiency from using these extra com
 
 \FloatBarrier
 
-\section{ModelingBrayton}
+\section{Modeling Brayton}
 
-The attached Python script uses CoolProp, a database with experimental values for water and air at incremental states. Using the design requirements of the power plant for all the states of the working fluid/gas can be found. After factoring in the efficiency of the components the enthalpy of the materials can be used to find the work out, work in, and Q-in can be used to find the thermal efficiency of the two cycles. (I will use the real project numbers in submission 3, but for now, they are just random numbers)(kinda feel like reworking the code to use lists instead of lone vars to make it less confusing, and easier to iterate over various pressure ratios and temperatures with the final data to make a big thermal efficiency). The Brayton cycle model with the following initial conditions; a compressor efficiency of 0.95 and a turbine efficiency of 0.93 will have a thermal efficiency of 32.98 \%.
+The attached Python script uses CoolProp, a database with experimental values for water and air at incremental states. Using the design requirements of the power plant for all the states of the working fluid/gas can be found. After factoring in the efficiency of the components the enthalpy of the materials can be used to find the work out, work in, and Q-in can be used to find the thermal efficiency of the two cycles. The Brayton cycle model with the following initial conditions; a compressor efficiency of 0.95 and a turbine efficiency of 0.93 will have a thermal efficiency of 32.98 \%.
 \begin{itemize}
 \item  low pressure = 101325 pa
-\item Minimum temp of gas = 25 c
+\item Minimum temp of gas = 25 Celsius
 \item compressor ratio = 6
-\item Maximum temp of gas = 1350 c
+\item Maximum temp of gas = 1350 Celsius
 \end{itemize}
 
 However, if an intercooler and second compressor are added to the cycle, with the initial compressor having a pressure ratio of 3, and the intercooler cooling the gas to 525c the system will have a thermal efficiency of 35.67 \%.  A 2.69 percent increase may not sound like a lot of savings, but most of the cost of running a power plant is fuel, and a 2.69 \% reduction in fuel costs is a serious amount of money.
-\section{ModelingRankine}
-The material properties at all states of the Rankine cycle can be found using CoolProp. Then using the enthalpy of the water at the various states work done by the pump, and work out of the turbines can be compared with Q-in.(will update values in submission 3 to project values) Using the following state conditions a pump efficiency of 0.92 and a turbine efficiency of 0.93 the thermal efficiency of the cycle is 37.48 \% is found.
-\begin{itemize}
-\item  low pressure = 6000 pa
-\item high pressure = 10000000 pa
-\item low temperature = 30 c
-\item high temperature = 440 c
-\end{itemize}
-
-However, the minimum quality of the water exiting the turbine is specified to be larger than 90 \%, so as not to break it. Without a reheat and a second turbine, the quality at the turbine exit is 75 \%. If the water leaves the first turbine at 700000 pa and is reheated to the maximum temperature and then sent through a second turbine until it reaches the low pressure the thermal efficiency is 43.20 \%. Not only does the reheating step maintain the quality of the material, so the turbines aren't damaged, but it increases the thermal efficiency by a whole 5.72 \%. Figure 4 shows the modified Temperature and entropy graph of the cycle, the two big drop-offs are the isentropic expansions in the turbines.
 
 \begin{figure}
     \centering
-    \includegraphics{Fig_test.pdf}
+    \includegraphics{BraytonDiagramInitial.pdf}
+    \caption{}
+    
+    \label{fig:my_label}
+\end{figure}
+
+\FloatBarrier
+
+\section{Modeling Rankine}
+The material properties at all states of the Rankine cycle can be found using CoolProp. Then using the enthalpy of the water at the various states work done by the pump, and work out of the turbines can be compared with Q-in.(will update values in submission 3 to project values) Using the following state conditions a pump efficiency of 0.92 and a turbine efficiency of 0.93 the thermal efficiency of the cycle is 40.69 \% is found.
+\begin{itemize}
+\item  low pressure = 6000 pa
+\item high pressure = 10000000 pa
+\item low temperature = 35 Celsius
+\item high temperature = 650 Celsius
+\end{itemize}
+
+However, the minimum quality of the water exiting the turbine is specified to be larger than 90 \%, so as not to break it. Without a reheat and a second turbine, the quality at the turbine exit is 83.5 \%. If the water leaves the first turbine at 700000 pa and is reheated to the maximum temperature and then sent through a second turbine until it reaches the low pressure the thermal efficiency is 46.93 \%. Not only does the reheating step maintain the quality of the material, so the turbines aren't damaged, but it increases the thermal efficiency by a whole 6.24 \%. Figure 4 shows the modified Temperature and entropy graph of the cycle, the two big drop-offs are the isentropic expansions in the turbines.
+
+\begin{figure}
+    \centering
+    \includegraphics{RankineInitial.pdf}
     \caption{Caption}
     
     \label{fig:my_label}
@@ -147,25 +158,75 @@ However, the minimum quality of the water exiting the turbine is specified to be
 \FloatBarrier
 
 \section{Modeling Heat Exchanger}
+In order to model the Heat Exchanger a measured effectiveness of 0.85 is used. This is an experimental value for potential heat exchangers on the market.
     \[Effectiveness = 0.85\]
+First the mass flow rate of the Brayton cycle is found using the given inputed heat and the mass specific change in enthalpy between state 2 and 3 of the Brayton cycle.
+    \[\dot{m} = h_3 - h_2 / \dot{Q}\]
+The effectiveness is defined as the actual heat transferred divided by the potential heat transferred.
    \[Effectiveness = actual Q transfer/ Ideal Q transfer\]
-   \[massFlowRateBrayton(h_4 - h_1) = massFlowRateRankine(h_4 - h_1)\]
-   \[massFlowRateBrayton(Ideal Q transfer Brayton) = massFlowRateRankine(Ideal Q transfer Rankine)\]
-   \[Ideal Q transfer Brayton = Ideal Q transfer\]
-   \[actualQtransfer = Effeciveness * massFlowRateRankine(Ideal Q transfer Rankine) / massFlowRateBrayton\]
+The actual heat transfered is defined as the heat input in the rankine cycle, which is the mass flow rate multiplied by the mass specific change in enthalpy between state 3 and 2 of the Rankine cycle.
+   \[Qactual = \dot{m} * (h_3 - h_2)\]
+The ideal heat transfered is defined as the mass flow rate multiplied by the mass specific change in enthalpy between state 4 and 1 of the Brayton cycle.
+    \[Qideal = \dot{m} * (h_4 - h_1)\]
+The Mass Flow Rate of the Rankine Cycle can then be found as:
+    \[\dot{m}rankine = effectiveness * dot{m}brayton * (h_4 - h_1)brayton / (h_3 - h_2)rankine\]
+Using the MassFlowRate of both cycles the combined Cycle Efficiency can by found by combining the net work per second and Q-in of the cycles.
+    \[CombinedEfficiency = netWork/Qin\]
+    \[WorkPerSecond = \dot{m} * massSpecificWork\]
+    \[QinPerSecond = Qin + \dot{m} * Qin-rankineReheat - \dot{m} * Qout-braytonIntercool\]
+    \[netWork = W-rankine + W-Brayton\]
+After Inputting the initial values used in both cycles, and using these equations a combined Cycle efficiency of 41.50 \% is found. This isn't great, especially considering it is only a slightly larger efficiency than the Brayton cycle, and is a lower efficiency than the Rankine cycle. So it is imperative to improve the efficiency.
 
+\section{Maximising Pressure Ratio Efficiency}
+Using the combined cycle model, a different variable for the pressure ratio of the Brayton Cycle is iterated over. A pressure ratio of 1 (no change in pressure) to 40 (already exceeding possible material science) is iterated over. The following graph displays the values for combined cycle efficiency are found.
 
+\begin{figure}
+    \centering
+    \includegraphics{presureratioefficiencygraph.pdf}
+    \caption{}
+    
+    \label{fig:my_label}
+\end{figure}
+
+\FloatBarrier
+
+While efficiency does continue to improve as the pressure ratio increases, it begins to level out in a manner similar to the square root function. So the increase in cost of the actual power plant meets diminishing returns. In order to choose an ideal pressure ratio various power plant component prices would be compared to the theoretical efficiency gains of their operation.
+
+\section{Maximising Efficiency of the Steam Turbine Rankine Cycle}
+The first variable that was iterated over was the low pressure of the Rankine cycle (the condenser pressure). The following efficiency graph was produced:
+
+\begin{figure}
+    \centering
+    \includegraphics{RankineLowPressureGraph.pdf}
+    \caption{Note the scale of the graph; the efficiency does not go over 1}
+    
+    \label{fig:my_label}
+\end{figure}
+
+\FloatBarrier
+
+The lowest pressure possible had the highest efficiency. However, despite the large changes in pressure the combined cycle efficiency changes only in the 4th decimal. So in order to maximise the cost benefit ratio of the power plant the cheapest or most reliable components should be used for the low pressure.
+Iterating over the maximum pressure of the steam turbine was next. The following graph displays the results:
+
+\begin{figure}
+    \centering
+    \includegraphics{RankineHighPressureGraph.pdf}
+    \caption{Note the scale of the graph; the efficiency does not go over 1}
+    
+    \label{fig:my_label}
+\end{figure}
+
+\FloatBarrier
+
+The graph has a maximum efficiency at 19100000 pascals. However, it is interesting how the graph increases at a rapid rate, then starts to decrease. This is because of the work required to compress the liquid water begins to exceed the gains in generated work.
 
 \section{Results}
 
-This is my results, //will elaborate
-
-
-Include minimum calculated quality and efficiency of Rankine with and without the reheat cycle. I need to edit the graph to include labels with states.
+Running the combined cycle simulation again, but with the maximum efficient values found (pressure ratio = 39, low pressure = 1000 pa, and high pressure of 19100000) yields a combined cycle efficiency of 74.19 \%. A Brayton cycle pressure ratio of 39, may not be possible with current materials, but it gives a huge combined cycle efficiency. The low pressure of the Rankine cycle adds almost nothing to the efficiency, and the high pressure of the Rankine cycle only adds a couple percent, so the largest increase of efficiency is made by increasing the pressure ratio.
 
 \section{Conclusions}
 
-This is my conclusion
+The combined Rankine and Brayton cycle provide a large thermal efficiency as compared to each individual cycle. The Rankine with reheat only had a thermal efficiency of 46.93 \% and the Brayton with an inter-cooler had a thermal efficiency of 35.67 \%. Once combined and optimised the thermal efficiency reached 74.19 \% (granted I did throttle the pressure ratio beyond current technology). In order to continue to improve the thermal efficiency more modifications could be added to the cycles, and iterating over their state values could yield a much larger efficiency. I did not iterate over all three variables at the same time to save coding and computing time. In order to continue this study to find maximum thermal efficiency of the combined cycle more modifications could be added to the Rankine and Brayton cycle. The Brayton cycle could have a regenerator. And the Rankine Cycle could utilise superheating during the compression stage. Then all the state variables could be iterated over at the same time.
 
 \appendix
 
@@ -175,6 +236,7 @@ This is my conclusion
 \bibliography{Paper_template_bib_file}
 \bibliographystyle{aiaa}
 
+this = https://github.com/cowblocks/Submission-1; selfreferential = true;
 
 \section*{Code Listing}
 
